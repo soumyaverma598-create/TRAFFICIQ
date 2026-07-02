@@ -1,0 +1,31 @@
+:root {
+
+  /* Backgrounds */
+  --background: #0B0D10;
+  --surface: #14181D;
+  --surface-elevated: #1C2229;
+
+  /* Text */
+  --text-primary: #F5F7FA;
+  --text-secondary: #9CA3AF;
+
+  /* Borders */
+  --border: #2B3138;
+
+  /* Accent */
+  --accent: #4FD1C5;
+
+  /* Status */
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  /* Animation */
+  --transition: all 220ms cubic-bezier(0.22, 1, 0.36, 1);
+
+}

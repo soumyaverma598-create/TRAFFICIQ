@@ -1,24 +1,18 @@
 import { Sparkles, Route, Clock, Gauge } from "lucide-react";
 
-/**
- * HeroSection
- *
- * Top-of-dashboard greeting + system status. Self-contained —
- * pages compose this above KPI cards / charts / insights, which
- * live in their own components.
- */
-export default function HeroSection() {
+export default function HeroSection({ hero }) {
   return (
     <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_360px] lg:gap-6">
-      {/* Left — greeting & overview */}
+
       <div className="flex flex-col justify-center rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-7 py-8 lg:px-9 lg:py-10">
         <p className="text-[13px] font-medium tracking-wide text-[var(--color-accent)]">
           AI TRAFFIC INTELLIGENCE PLATFORM
         </p>
 
         <h1 className="mt-3 text-[28px] font-semibold tracking-tight text-[var(--color-text-primary)] lg:text-[32px]">
-          Good Morning, Soumya <span className="inline-block">👋</span>
-        </h1>
+  {hero?.greeting || "Loading..."}{" "}
+  <span className="inline-block">👋</span>
+</h1>
 
         <p className="mt-1.5 text-[15px] text-[var(--color-text-secondary)]">
           Welcome back to TRAFFICIQ
@@ -39,7 +33,6 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Right — glass status panel */}
       <div className="rounded-2xl border border-[var(--color-border)]/70 bg-[var(--color-surface)]/60 px-6 py-6 backdrop-blur-md">
         <div className="flex items-center gap-2.5">
           <span className="relative flex h-2 w-2">

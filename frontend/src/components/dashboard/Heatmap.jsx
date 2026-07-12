@@ -1,50 +1,40 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Info,
   ChevronDown,
-  Map,
-  Radio,
   Layers,
   Brain,
   Navigation,
   MousePointerClick,
 } from "lucide-react";
+import RaipurMap from "./RaipurMap";
 
-/**
- * Heatmap
- * Traffic Density Map card. The map area is a static, premium placeholder
- * built entirely with Tailwind — designed so it can later be swapped for
- * a real MapLibre instance without touching the surrounding layout.
- */
-export default function Heatmap() {
-  const [timeMode, setTimeMode] = useState("Current");
+const ICONS = {
+  layers: Layers,
+  brain: Brain,
+  navigation: Navigation,
+  pointer: MousePointerClick,
+};
+
+export default function Heatmap({ heatmap }) {
+  const [timeMode, setTimeMode] = useState(
+    heatmap?.selectedTimeMode ?? "Current"
+  );
   const [timeModeOpen, setTimeModeOpen] = useState(false);
-  const [dateRange, setDateRange] = useState("Today");
+  const [dateRange, setDateRange] = useState(
+    heatmap?.selectedDateRange ?? "Today"
+  );
   const [dateRangeOpen, setDateRangeOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
 
-  const timeModes = ["Current", "Forecast", "Historical"];
-  const dateRanges = ["Today", "Last 24h"];
-
-  const legend = [
-    { label: "Low", range: "< 500", tone: "bg-emerald-500" },
-    { label: "Moderate", range: "500–1500", tone: "bg-amber-400" },
-    { label: "Heavy", range: "1500–3000", tone: "bg-orange-500" },
-    { label: "Severe", range: "> 3000", tone: "bg-rose-500" },
-  ];
-
-  const futureCapabilities = [
-    { label: "Live road overlays", icon: Layers },
-    { label: "AI congestion prediction", icon: Brain },
-    { label: "Route recommendations", icon: Navigation },
-    { label: "Clickable road segments", icon: MousePointerClick },
-  ];
+  const timeModes = heatmap?.timeModes ?? [];
+  const dateRanges = heatmap?.dateRanges ?? [];
+  const legend = heatmap?.legend ?? [];
+  const futureCapabilities = heatmap?.futureCapabilities ?? [];
 
   return (
     <div className="w-full max-w-3xl mx-auto rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 sm:p-7 text-neutral-100">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-        {/* Left: title + info */}
         <div className="flex items-center gap-2 relative">
           <h2 className="text-base sm:text-lg font-semibold tracking-tight text-neutral-50">
             Traffic Density Map
@@ -68,9 +58,7 @@ export default function Heatmap() {
           )}
         </div>
 
-        {/* Right: controls */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Time mode dropdown */}
           <div className="relative">
             <button
               type="button"
@@ -108,7 +96,6 @@ export default function Heatmap() {
             )}
           </div>
 
-          {/* Date range dropdown */}
           <div className="relative">
             <button
               type="button"
@@ -146,7 +133,6 @@ export default function Heatmap() {
             )}
           </div>
 
-          {/* Auto refresh indicator */}
           <div className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs sm:text-sm text-neutral-300">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-60" />
@@ -157,33 +143,10 @@ export default function Heatmap() {
         </div>
       </div>
 
-      {/* Map placeholder */}
       <div className="relative overflow-hidden rounded-2xl border border-neutral-800/80 bg-neutral-950/40 h-64 sm:h-80">
-        {/* Subtle grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-          }}
-        />
-
-        <div className="relative h-full w-full flex flex-col items-center justify-center gap-3 px-6 text-center">
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/60 p-3.5">
-            <Map className="h-6 w-6 text-neutral-400" />
-          </div>
-          <p className="text-sm sm:text-base font-medium text-neutral-200">
-            Interactive Traffic Map
-          </p>
-          <p className="text-xs sm:text-sm text-neutral-500 max-w-xs">
-            Map layer will display live congestion, predictions and AI
-            analysis.
-          </p>
-        </div>
+        <RaipurMap />
       </div>
 
-      {/* Legend */}
       <div className="mt-6">
         <div className="flex flex-col sm:flex-row sm:items-stretch gap-2">
           {legend.map(({ label, tone }) => (
@@ -217,21 +180,24 @@ export default function Heatmap() {
         </div>
       </div>
 
-      {/* Bottom note */}
       <div className="mt-6 rounded-lg border border-neutral-800/80 bg-neutral-900/30 px-4 py-3.5">
         <p className="text-[11px] sm:text-xs font-medium text-neutral-500 mb-2">
           Future capabilities
         </p>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
-          {futureCapabilities.map(({ label, icon: Icon }) => (
-            <li
-              key={label}
-              className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400"
-            >
-              <Icon className="h-3.5 w-3.5 text-neutral-600 shrink-0" />
-              {label}
-            </li>
-          ))}
+          {futureCapabilities.map((item) => {
+            const Icon = ICONS[item.icon] ?? Layers;
+
+            return (
+              <li
+                key={item.label}
+                className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400"
+              >
+                <Icon className="h-3.5 w-3.5 text-neutral-600 shrink-0" />
+                {item.label}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

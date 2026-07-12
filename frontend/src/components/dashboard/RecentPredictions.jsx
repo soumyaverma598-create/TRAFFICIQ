@@ -1,4 +1,3 @@
-import React from "react";
 import { ArrowRight } from "lucide-react";
 
 const PREDICTIONS = [
@@ -60,15 +59,10 @@ function StatusBadge({ status }) {
   );
 }
 
-/**
- * RecentPredictions
- * Table of recent AI traffic predictions. Renders as a table on larger
- * screens and stacks into individual cards on mobile.
- */
 export default function RecentPredictions() {
   return (
     <div className="w-full max-w-3xl mx-auto rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 sm:p-7 text-neutral-100">
-      {/* Header */}
+
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-base sm:text-lg font-semibold tracking-tight text-neutral-50">
           Recent Predictions
@@ -82,7 +76,6 @@ export default function RecentPredictions() {
         </button>
       </div>
 
-      {/* Desktop table */}
       <div className="hidden md:block overflow-hidden rounded-xl border border-neutral-800/80">
         <table className="w-full text-sm">
           <thead>
@@ -132,7 +125,6 @@ export default function RecentPredictions() {
         </table>
       </div>
 
-      {/* Mobile stacked cards */}
       <div className="md:hidden flex flex-col gap-2.5">
         {PREDICTIONS.map((row) => (
           <div

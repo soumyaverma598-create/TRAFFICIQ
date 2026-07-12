@@ -6,11 +6,6 @@ import {
   Settings,
 } from "lucide-react";
 
-/**
- * Single source of truth for primary navigation.
- * Add new destinations here — Sidebar renders this list directly,
- * so no JSX changes are needed elsewhere.
- */
 export const navItems = [
   {
     label: "Dashboard",

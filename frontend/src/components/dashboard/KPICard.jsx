@@ -17,17 +17,8 @@ const TREND_STYLES = {
     bg: "bg-[var(--color-text-secondary)]/10",
   },
 };
-
-// Static relative heights for the sparkline placeholder — purely
-// decorative until real series data is wired in.
 const SPARKLINE_BARS = [4, 7, 5, 9, 6, 10, 8, 12, 9, 14];
 
-/**
- * KPICard
- *
- * Reusable metric tile. Pass a lucide-react icon component via
- * `icon` (not a rendered element), e.g. `icon={Activity}`.
- */
 export default function KPICard({
   title,
   value,
@@ -42,7 +33,7 @@ export default function KPICard({
 
   return (
     <div className="group flex flex-col rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-5 transition-all duration-200 ease-[var(--ease-tactile)] hover:-translate-y-0.5 hover:border-[var(--color-text-secondary)]/40">
-      {/* Top row — icon, title, trend badge */}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           {Icon && (
@@ -65,14 +56,12 @@ export default function KPICard({
         )}
       </div>
 
-      {/* Middle — value */}
       <div className="mt-5">
         <span className="text-[30px] font-semibold tracking-tight text-[var(--color-text-primary)]">
           {value}
         </span>
       </div>
 
-      {/* Bottom — description + sparkline placeholder */}
       <div className="mt-4 flex items-end justify-between gap-4">
         {description && (
           <p className="text-[12.5px] leading-relaxed text-[var(--color-text-secondary)]">

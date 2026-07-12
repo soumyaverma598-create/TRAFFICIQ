@@ -1,11 +1,5 @@
 import { Menu, Search, Bell, User } from "lucide-react";
 
-/**
- * Header
- *
- * `title` is passed down by each route/page so the shell never
- * needs to know about page-level content.
- */
 export default function Header({ title = "Dashboard", onMenuClick = () => {} }) {
   return (
     <header className="sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background)]/95 px-5 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-background)]/80 lg:px-8">

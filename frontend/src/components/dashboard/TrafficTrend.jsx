@@ -1,22 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ChevronDown, ArrowUp, Gauge, ArrowDown } from "lucide-react";
 
-/**
- * TrafficTrend
- * Premium analytics card showing 24h traffic trend with a lightweight
- * hand-rolled SVG chart placeholder (no charting libraries).
- */
-export default function TrafficTrend() {
+export default function TrafficTrend({ data }) {
   const [rangeOpen, setRangeOpen] = useState(false);
-  const range = "Last 24 Hours";
-
-  // Static placeholder series representing relative traffic load across a day.
-  // Values are illustrative only (0-100 scale), shaped to match the stated
-  // peak (6 PM) and low (2 AM) points below.
-  const points = [
-    18, 14, 10, 8, 9, 14, 22, 34, 46, 52, 55, 58, 60, 62, 64, 68, 74, 82, 96,
-    88, 70, 52, 36, 24,
-  ];
+  const range = data?.range ?? "Last 24 Hours";
+  const points = data?.points?.length ? data.points : [0];
 
   const width = 720;
   const height = 220;
@@ -28,7 +16,7 @@ export default function TrafficTrend() {
   const min = Math.min(...points);
   const span = max - min || 1;
 
-  const stepX = (width - padX * 2) / (points.length - 1);
+  const stepX = (width - padX * 2) / (points.length - 1 || 1);
   const coords = points.map((v, i) => {
     const x = padX + i * stepX;
     const y =
@@ -48,24 +36,25 @@ export default function TrafficTrend() {
   const peakIndex = points.indexOf(max);
   const peakPoint = coords[peakIndex];
 
-  const hourLabels = ["12AM", "6AM", "12PM", "6PM", "11PM"];
+  const hourLabels =
+    data?.labels ?? ["12AM", "6AM", "12PM", "6PM", "11PM"];
 
   const metrics = [
     {
       label: "Peak Traffic",
-      value: "6 PM",
+      value: data?.peakTraffic ?? "--",
       icon: ArrowUp,
       tone: "text-emerald-400",
     },
     {
       label: "Average Speed",
-      value: "46 km/h",
+      value: data?.averageSpeed ?? "--",
       icon: Gauge,
       tone: "text-neutral-300",
     },
     {
       label: "Lowest Traffic",
-      value: "2 AM",
+      value: data?.lowestTraffic ?? "--",
       icon: ArrowDown,
       tone: "text-rose-400",
     },
@@ -73,7 +62,7 @@ export default function TrafficTrend() {
 
   return (
     <div className="w-full max-w-3xl mx-auto rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 sm:p-7 text-neutral-100">
-      {/* Header */}
+
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h2 className="text-base sm:text-lg font-semibold tracking-tight text-neutral-50">
@@ -119,14 +108,13 @@ export default function TrafficTrend() {
         </div>
       </div>
 
-      {/* Chart */}
       <div className="rounded-xl border border-neutral-800/80 bg-neutral-950/40 p-4 sm:p-5">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-44 sm:h-56"
           preserveAspectRatio="none"
         >
-          {/* Grid lines */}
+
           {[0.25, 0.5, 0.75].map((f) => (
             <line
               key={f}
@@ -141,7 +129,6 @@ export default function TrafficTrend() {
             />
           ))}
 
-          {/* Baseline */}
           <line
             x1={0}
             x2={width}
@@ -152,10 +139,8 @@ export default function TrafficTrend() {
             strokeWidth="1"
           />
 
-          {/* Area under curve */}
           <path d={areaPath} fill="currentColor" className="text-sky-500/10" />
 
-          {/* Line */}
           <path
             d={linePath}
             fill="none"
@@ -166,7 +151,6 @@ export default function TrafficTrend() {
             strokeLinejoin="round"
           />
 
-          {/* Peak marker */}
           <circle
             cx={peakPoint[0]}
             cy={peakPoint[1]}
@@ -183,7 +167,6 @@ export default function TrafficTrend() {
           />
         </svg>
 
-        {/* Time axis labels */}
         <div className="mt-2 flex justify-between text-[10px] sm:text-xs text-neutral-600 px-1">
           {hourLabels.map((h) => (
             <span key={h}>{h}</span>
@@ -191,7 +174,6 @@ export default function TrafficTrend() {
         </div>
       </div>
 
-      {/* Metrics */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {metrics.map(({ label, value, icon: Icon, tone }) => (
           <div

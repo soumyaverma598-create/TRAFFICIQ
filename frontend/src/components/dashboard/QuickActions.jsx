@@ -1,4 +1,3 @@
-import React from "react";
 import { Sparkles, BarChart3, FileText, Map, ArrowRight } from "lucide-react";
 
 const ACTIONS = [
@@ -33,11 +32,6 @@ const ACTIONS = [
   },
 ];
 
-/**
- * QuickActions
- * Premium quick-actions grid for the TRAFFICIQ dashboard. Purely
- * presentational — wire up onClick handlers per action id when ready.
- */
 export default function QuickActions() {
   return (
     <div className="w-full max-w-3xl mx-auto text-neutral-100">
@@ -62,7 +56,6 @@ export default function QuickActions() {
         }
       `}</style>
 
-      {/* Header */}
       <div className="mb-5">
         <h2 className="text-base sm:text-lg font-semibold tracking-tight text-neutral-50">
           Quick Actions
@@ -72,7 +65,6 @@ export default function QuickActions() {
         </p>
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {ACTIONS.map(({ id, icon: Icon, title, description, tooltip, primary }, i) => (
           <button

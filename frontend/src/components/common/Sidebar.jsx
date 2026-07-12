@@ -2,17 +2,10 @@ import { NavLink } from "react-router-dom";
 import { Radar, X } from "lucide-react";
 import { navItems } from "./navConfig";
 
-/**
- * Sidebar
- *
- * Desktop  (lg+):   fixed, full width (280px), labels visible.
- * Tablet   (md-lg):  fixed, collapsed to icon rail, labels hidden.
- * Mobile   (<md):    off-canvas drawer, toggled via `mobileOpen`.
- */
 export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
   return (
     <>
-      {/* Mobile scrim */}
+
       <div
         onClick={onClose}
         aria-hidden="true"
@@ -26,7 +19,7 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Logo / project identity */}
+
         <div className="flex h-[72px] shrink-0 items-center gap-3 border-b border-[var(--color-border)] px-6 md:justify-center md:px-0 lg:justify-start lg:px-6">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-elevated)]">
             <Radar className="h-4.5 w-4.5 text-[var(--color-accent)]" strokeWidth={1.75} />
@@ -49,7 +42,6 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-5 md:items-center md:px-2 lg:items-stretch lg:px-3">
           {navItems.map(({ label, path, icon: Icon }) => (
             <NavLink
@@ -83,7 +75,6 @@ export default function Sidebar({ mobileOpen = false, onClose = () => {} }) {
           ))}
         </nav>
 
-        {/* Footer status slot */}
         <div className="shrink-0 border-t border-[var(--color-border)] px-6 py-4 md:px-2 lg:px-6">
           <div className="flex items-center gap-2 md:justify-center lg:justify-start">
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)]" />

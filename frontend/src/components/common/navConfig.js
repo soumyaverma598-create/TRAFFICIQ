@@ -2,8 +2,6 @@ import {
   LayoutDashboard,
   Activity,
   BarChart3,
-  FileText,
-  Settings,
 } from "lucide-react";
 
 export const navItems = [
@@ -21,15 +19,5 @@ export const navItems = [
     label: "Analytics",
     path: "/analytics",
     icon: BarChart3,
-  },
-  {
-    label: "Reports",
-    path: "/reports",
-    icon: FileText,
-  },
-  {
-    label: "Settings",
-    path: "/settings",
-    icon: Settings,
   },
 ];

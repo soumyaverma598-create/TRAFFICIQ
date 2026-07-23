@@ -1,0 +1,152 @@
+.mbg-section {
+  position: relative;
+  user-select: none;
+}
+
+.mbg-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .mbg-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mbg-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(160px, auto);
+  }
+}
+
+.magic-bento-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  min-height: 180px;
+  width: 100%;
+  padding: 1.4em;
+  border-radius: 20px;
+  border: 1px solid var(--color-border, #2b3138);
+  background: var(--color-surface, #14181d);
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 220px;
+  --glow-color: 129, 140, 248;
+}
+
+.magic-bento-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: 0 10px 28px rgba(5, 6, 10, 0.45);
+}
+
+.magic-bento-card__header,
+.magic-bento-card__content {
+  position: relative;
+  z-index: 1;
+}
+
+.magic-bento-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75em;
+}
+
+.magic-bento-card__label {
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-text-secondary, #9ca3af);
+}
+
+.magic-bento-card__icon {
+  color: rgba(var(--glow-color), 0.9);
+}
+
+.magic-bento-card__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.magic-bento-card__value {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary, #f5f7fa);
+  margin-top: 0.6em;
+}
+
+.magic-bento-card__title {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-text-primary, #f5f7fa);
+  margin: 0.35em 0 0.15em;
+}
+
+.magic-bento-card__description {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--color-text-secondary, #9ca3af);
+}
+
+/* Border glow that follows the cursor */
+.magic-bento-card--border-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.75)) 0%,
+    rgba(var(--glow-color), calc(var(--glow-intensity) * 0.35)) 30%,
+    transparent 60%
+  );
+  border-radius: inherit;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mbg-particle-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.mbg-particle::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: rgba(var(--glow-color, 129, 140, 248), 0.18);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.mbg-global-spotlight {
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+  z-index: 200 !important;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .magic-bento-card {
+    transition: none;
+  }
+}

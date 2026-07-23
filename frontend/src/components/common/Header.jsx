@@ -1,6 +1,42 @@
-import { Menu, Search, Bell, User } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Menu, Search, Bell } from "lucide-react";
+import CommandPalette from "./CommandPalette";
+import NotificationDropdown from "./NotificationDropdown";
+import { initialNotifications } from "../../data/notifications";
 
 export default function Header({ title = "Dashboard", onMenuClick = () => {} }) {
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const bellRef = useRef(null);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const openPalette = useCallback(() => setPaletteOpen(true), []);
+  const closePalette = useCallback(() => setPaletteOpen(false), []);
+
+  const handleMarkRead = useCallback((id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  }, []);
+
+  const handleMarkAllRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }, []);
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      const isK = e.key === "k" || e.key === "K";
+      if ((e.metaKey || e.ctrlKey) && isK) {
+        e.preventDefault();
+        setPaletteOpen(true);
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <header className="sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-background)]/95 px-5 backdrop-blur supports-[backdrop-filter]:bg-[var(--color-background)]/80 lg:px-8">
       <div className="flex items-center gap-3">
@@ -19,6 +55,7 @@ export default function Header({ title = "Dashboard", onMenuClick = () => {} }) 
 
       <div className="flex items-center gap-2">
         <button
+          onClick={openPalette}
           aria-label="Search"
           className="flex h-9 items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-[var(--color-text-secondary)] transition-all duration-200 ease-[var(--ease-tactile)] hover:-translate-y-[1px] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-text-primary)]"
         >
@@ -29,23 +66,31 @@ export default function Header({ title = "Dashboard", onMenuClick = () => {} }) 
           </kbd>
         </button>
 
-        <button
-          aria-label="Notifications"
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition-all duration-200 ease-[var(--ease-tactile)] hover:-translate-y-[1px] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-text-primary)]"
-        >
-          <Bell className="h-4 w-4" strokeWidth={1.75} />
-          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
-        </button>
+        <div className="relative">
+          <button
+            ref={bellRef}
+            onClick={() => setNotifOpen((v) => !v)}
+            aria-label="Notifications"
+            className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] transition-all duration-200 ease-[var(--ease-tactile)] hover:-translate-y-[1px] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-text-primary)]"
+          >
+            <Bell className="h-4 w-4" strokeWidth={1.75} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+            )}
+          </button>
 
-        <div className="mx-1 h-6 w-px bg-[var(--color-border)]" />
-
-        <button
-          aria-label="Profile"
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] transition-all duration-200 ease-[var(--ease-tactile)] hover:-translate-y-[1px] hover:border-[var(--color-accent)]/40 hover:text-[var(--color-text-primary)]"
-        >
-          <User className="h-4 w-4" strokeWidth={1.75} />
-        </button>
+          <NotificationDropdown
+            open={notifOpen}
+            notifications={notifications}
+            onMarkRead={handleMarkRead}
+            onMarkAllRead={handleMarkAllRead}
+            onClose={() => setNotifOpen(false)}
+            anchorRef={bellRef}
+          />
+        </div>
       </div>
+
+      <CommandPalette open={paletteOpen} onClose={closePalette} />
     </header>
   );
 }

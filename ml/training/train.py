@@ -1,5 +1,5 @@
 import pandas as pd
-
+import joblib
 df = pd.read_csv("ml/data/processed/training_data.csv")
 
 print(df.head())
@@ -53,6 +53,7 @@ from xgboost import XGBRegressor
 model = XGBRegressor(random_state=42)
 
 model.fit(x_train_transformed, y_train)
+joblib.dump(model, "ml/models/xgboost_model.pkl")
 
 predictions = model.predict(x_test_transformed)
 
@@ -73,5 +74,6 @@ r2 = r2_score(y_test, predictions)
 print(f"MAE  : {mae:.2f}")
 print(f"RMSE : {rmse:.2f}")
 print(f"R²   : {r2:.4f}")
-    
 
+
+joblib.dump(trans, "ml/models/preprocessor.pkl")

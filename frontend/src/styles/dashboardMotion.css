@@ -1,0 +1,232 @@
+/* ============================================================
+   TrafficIQ Dashboard — shared motion system.
+   Single source of truth for every keyframe/animation utility
+   used across Hero, How It Works, Key Features, and Technology
+   Stack, so no section reimplements the same animation logic.
+   Imported once, in src/pages/Dashboard.jsx.
+   ============================================================ */
+
+:root {
+  --dm-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dm-ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --dm-indigo: #4f46e5;
+  --dm-indigo-light: #818cf8;
+  --dm-cyan: #22d3ee;
+  --dm-violet: #c084fc;
+}
+
+@property --dm-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ---------- Hero: immediate on-mount entrance ---------- */
+@keyframes dm-hero-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.dm-hero-fade-in { animation: dm-hero-fade-in 1.4s ease-out both; }
+
+@keyframes dm-hero-text-fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.dm-hero-text-in { animation: dm-hero-text-fade-up 0.85s var(--dm-ease-smooth) both; }
+.dm-hero-text-in.delay-1 { animation-delay: 0.05s; }
+.dm-hero-text-in.delay-2 { animation-delay: 0.18s; }
+.dm-hero-text-in.delay-3 { animation-delay: 0.32s; }
+.dm-hero-text-in.delay-4 { animation-delay: 0.46s; }
+.dm-hero-text-in.delay-5 { animation-delay: 0.6s; }
+
+@keyframes dm-title-glow {
+  0%, 100% { opacity: 1; text-shadow: 0 0 28px rgba(129, 140, 248, 0.45), 0 0 64px rgba(34, 211, 238, 0.18); }
+  50% { opacity: 0.7; text-shadow: 0 0 44px rgba(129, 140, 248, 0.65), 0 0 90px rgba(34, 211, 238, 0.3); }
+}
+.dm-title-glow { animation: dm-title-glow 5s ease-in-out 1.4s infinite; }
+
+@keyframes dm-camera-breathe {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  50% { transform: scale(1.035) translate(-4px, -3px); }
+}
+.dm-camera-rig { animation: dm-camera-breathe 20s ease-in-out infinite; transform-origin: 50% 50%; will-change: transform; }
+
+/* ---------- Scroll-triggered entrance (How It Works / Features / Tech Stack) ---------- */
+.dm-reveal {
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  transition: opacity 0.7s var(--dm-ease-spring), transform 0.7s var(--dm-ease-spring);
+}
+.dm-reveal.dm-visible { opacity: 1; transform: translateY(0) scale(1); }
+.dm-reveal.delay-1.dm-visible { transition-delay: 0.05s; }
+.dm-reveal.delay-2.dm-visible { transition-delay: 0.15s; }
+.dm-reveal.delay-3.dm-visible { transition-delay: 0.28s; }
+.dm-reveal.delay-4.dm-visible { transition-delay: 0.4s; }
+.dm-reveal.delay-5.dm-visible { transition-delay: 0.52s; }
+.dm-reveal.delay-6.dm-visible { transition-delay: 0.64s; }
+
+/* ---------- Ambient / glow (reused across Hero + every section below) ---------- */
+@keyframes dm-glow-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.8; } }
+.dm-glow-pulse { animation: dm-glow-pulse 4.5s ease-in-out infinite; }
+
+@keyframes dm-dash-flow { to { stroke-dashoffset: -280; } }
+.dm-dash-flow { stroke-dasharray: 8 16; animation: dm-dash-flow 2.6s linear infinite; }
+
+@keyframes dm-node-pulse {
+  0% { r: 3; opacity: 0.9; }
+  70% { r: 14; opacity: 0; }
+  100% { r: 14; opacity: 0; }
+}
+.dm-node-pulse { transform-box: fill-box; transform-origin: center; animation: dm-node-pulse 2.8s ease-out infinite; }
+
+@keyframes dm-hotspot-pulse {
+  0%, 100% { opacity: 0; transform: scale(0.85); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+.dm-hotspot { transform-box: fill-box; transform-origin: center; animation: dm-hotspot-pulse 9s ease-in-out infinite; }
+
+@keyframes dm-data-node-float {
+  0%, 100% { transform: translateY(0px); opacity: 0.55; }
+  50% { transform: translateY(-10px); opacity: 1; }
+}
+.dm-data-node { transform-box: fill-box; transform-origin: center; animation: dm-data-node-float var(--dur, 7s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes dm-scan-sweep {
+  0% { transform: translateX(-40%) rotate(8deg); opacity: 0; }
+  8% { opacity: 0.5; }
+  45% { opacity: 0.5; }
+  55% { opacity: 0; }
+  100% { transform: translateX(140%) rotate(8deg); opacity: 0; }
+}
+.dm-scan-beam { animation: dm-scan-sweep 7s ease-in-out infinite; }
+
+@keyframes dm-blob-drift-a {
+  0%, 100% { transform: translate(-4%, -2%) scale(1); opacity: 0.55; }
+  50% { transform: translate(2%, 3%) scale(1.15); opacity: 0.75; }
+}
+.dm-blob-a { animation: dm-blob-drift-a 14s ease-in-out infinite; }
+
+@keyframes dm-blob-drift-b {
+  0%, 100% { transform: translate(3%, 2%) scale(1); opacity: 0.45; }
+  50% { transform: translate(-2%, -3%) scale(1.12); opacity: 0.68; }
+}
+.dm-blob-b { animation: dm-blob-drift-b 16s ease-in-out infinite; }
+
+/* ---------- Cards (How It Works + Key Features) ---------- */
+.dm-card-hover {
+  transition: transform 0.3s var(--dm-ease-smooth), box-shadow 0.3s var(--dm-ease-smooth), border-color 0.3s var(--dm-ease-smooth);
+}
+.dm-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px -20px rgba(79, 70, 229, 0.55);
+}
+
+@keyframes dm-icon-idle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(-4deg); }
+}
+.dm-icon-idle { animation: dm-icon-idle 4s ease-in-out infinite; }
+
+@keyframes dm-float-sm {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+.dm-float-sm { animation: dm-float-sm 7s ease-in-out infinite; }
+
+/* Animated gradient border, shown on hover (glass cards + chips) */
+.dm-gradient-border { position: relative; }
+.dm-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--dm-angle), var(--dm-indigo-light), var(--dm-cyan), var(--dm-violet), var(--dm-indigo-light));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+@keyframes dm-border-spin { to { --dm-angle: 360deg; } }
+.dm-gradient-border:hover::before {
+  opacity: 1;
+  animation: dm-border-spin 3s linear infinite;
+}
+
+/* ---------- Dark glass surfaces (used below the Hero) ---------- */
+.dm-glass-panel {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: background 0.3s var(--dm-ease-smooth), border-color 0.3s var(--dm-ease-smooth);
+}
+.dm-glass-panel:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(129, 140, 248, 0.4);
+}
+
+.dm-chip-dark {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background 0.25s var(--dm-ease-smooth), border-color 0.25s var(--dm-ease-smooth), box-shadow 0.25s var(--dm-ease-smooth), transform 0.25s var(--dm-ease-smooth);
+}
+.dm-chip-dark:hover {
+  background: rgba(129, 140, 248, 0.12);
+  border-color: rgba(129, 140, 248, 0.5);
+  box-shadow: 0 0 26px -4px rgba(99, 102, 241, 0.55);
+}
+
+/* ---------- Pipeline flow (How It Works connecting line) ---------- */
+@keyframes dm-pipeline-dash { to { stroke-dashoffset: -240; } }
+.dm-pipeline-line { stroke-dasharray: 6 10; animation: dm-pipeline-dash 3s linear infinite; }
+
+/* ---------- Tech pills ---------- */
+@keyframes dm-pill-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+.dm-pill-float { animation: dm-pill-float var(--dur, 5s) ease-in-out infinite; animation-delay: var(--delay, 0s); }
+
+@keyframes dm-pill-beam {
+  0% { transform: translateX(-10%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(1100%); opacity: 0; }
+}
+.dm-pill-beam { animation: dm-pill-beam 6s ease-in-out infinite; }
+
+/* ---------- Motion elements hidden entirely under reduced motion ---------- */
+.hero-motion-sensitive { display: block; }
+
+/* ---------- Reduced motion: disable every animation defined above ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .dm-hero-fade-in,
+  .dm-hero-text-in,
+  .dm-title-glow,
+  .dm-camera-rig,
+  .dm-glow-pulse,
+  .dm-dash-flow,
+  .dm-node-pulse,
+  .dm-hotspot,
+  .dm-data-node,
+  .dm-scan-beam,
+  .dm-blob-a,
+  .dm-blob-b,
+  .dm-icon-idle,
+  .dm-float-sm,
+  .dm-gradient-border:hover::before,
+  .dm-pipeline-line,
+  .dm-pill-float,
+  .dm-pill-beam {
+    animation: none !important;
+  }
+  .dm-camera-rig { transform: none !important; }
+  .dm-hero-text-in { opacity: 1 !important; transform: none !important; }
+  .dm-reveal { transition: none !important; opacity: 1 !important; transform: none !important; }
+  .hero-motion-sensitive { display: none !important; }
+}

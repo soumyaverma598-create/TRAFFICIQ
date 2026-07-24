@@ -1,212 +1,360 @@
-// Isometric "AI-scanned city" scene rendered as a single inline SVG.
-// Geometry is computed once at module load via the shared projector
-// from utils/isometricGrid — not per render. All motion classes
-// (dm-*) come from src/styles/dashboardMotion.css.
+import { useEffect, useRef } from "react";
 
-import { makeProjector, pathFromWaypoints, buildGridLines, pointStr } from "../../utils/isometricGrid";
+const PALETTE = {
+  background: "#0A0D18",
+  gridLine: "rgba(46, 55, 90, 0.35)",
+  buildingFillRight: "#141a2c",
+  buildingFillLeft: "#1c2340",
+  buildingFillTop: "#212a4a",
+  edgeCyan: "rgba(0, 242, 254, 0.55)",
+  edgePurple: "rgba(138, 43, 226, 0.55)",
+  windowCyan: "rgba(0, 242, 254, 0.55)",
+  windowPurple: "rgba(138, 43, 226, 0.5)",
+  trafficCyan: "#00f2fe",
+  trafficTeal: "#2dd4bf",
+  trafficViolet: "#8a2be2",
+};
 
-const ORIGIN = { x: 600, y: 250 };
-const TILE_W = 92;
-const TILE_H = 46;
-const RANGE = 7;
-const project = makeProjector(ORIGIN, TILE_W, TILE_H);
+const GRID_COLS = 14;
+const GRID_ROWS = 9;
+const TILE_W = 84;
+const TILE_H = 42;
+const BUILDING_DENSITY = 0.32;
+const PARTICLE_COUNT = 26;
 
-const gridLines = buildGridLines(project, RANGE);
-
-const BUILDING_DEFS = [
-  { i: -6, j: -2, h: 46 },
-  { i: -5, j: -4, h: 64 },
-  { i: -3, j: -6, h: 34 },
-  { i: 4, j: 1, h: 50 },
-  { i: 5, j: 3, h: 36 },
-  { i: 2, j: 5, h: 58 },
-  { i: -6, j: 3, h: 28 },
-  { i: 5, j: -5, h: 42 },
-  { i: -1, j: -7, h: 24 },
-  { i: 6, j: -1, h: 30 },
-];
-
-function buildingEdges({ i, j, h }) {
-  const N = project(i, j);
-  const E = project(i + 1, j);
-  const S = project(i + 1, j + 1);
-  const W = project(i, j + 1);
-  const lift = (p) => ({ x: p.x, y: p.y - h });
-
+function project(col, row, originX, originY) {
   return {
-    verticals: [N, E, S, W].map((p) => `M ${pointStr(p)} L ${pointStr(lift(p))}`),
-    top: `M ${[N, E, S, W].map((p) => pointStr(lift(p))).join(" L ")} Z`,
+    x: originX + (col - row) * (TILE_W / 2),
+    y: originY + (col + row) * (TILE_H / 2),
   };
 }
 
-const buildings = BUILDING_DEFS.map((def, index) => ({
-  key: `building-${index}`,
-  ...buildingEdges(def),
-}));
+function lerpPt(a, b, t) {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
 
-const flowPaths = [
-  {
-    key: "flow-1",
-    color: "#22D3EE",
-    d: pathFromWaypoints(project, [
-      { i: -7, j: 2 }, { i: -4, j: 2 }, { i: -4, j: -1 },
-      { i: -1, j: -1 }, { i: -1, j: 2 }, { i: 3, j: 2 }, { i: 3, j: 6 },
-    ]),
-  },
-  {
-    key: "flow-2",
-    color: "#818CF8",
-    d: pathFromWaypoints(project, [
-      { i: 7, j: -3 }, { i: 3, j: -3 }, { i: 3, j: 0 },
-      { i: -1, j: 0 }, { i: -1, j: -4 },
-    ]),
-  },
-  {
-    key: "flow-3",
-    color: "#C084FC",
-    d: pathFromWaypoints(project, [
-      { i: -6, j: -5 }, { i: -2, j: -5 }, { i: -2, j: -2 }, { i: 1, j: -2 },
-    ]),
-  },
-  {
-    key: "flow-4",
-    color: "#34D399",
-    d: pathFromWaypoints(project, [
-      { i: 6, j: 4 }, { i: 2, j: 4 }, { i: 2, j: 1 }, { i: -2, j: 1 }, { i: -2, j: 4 },
-    ]),
-  },
-];
+function makeSeededRandom(seed) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
 
-const INTERSECTION_DEFS = [
-  { i: -4, j: 2 }, { i: -1, j: 2 }, { i: 3, j: 2 },
-  { i: 3, j: -3 }, { i: -1, j: -4 }, { i: -2, j: -2 },
-  { i: 2, j: 1 }, { i: -2, j: 1 },
-];
+export default function CityBackground({ opacity = 0.55, className = "" }) {
+  const canvasRef = useRef(null);
+  const frameRef = useRef(null);
 
-const intersections = INTERSECTION_DEFS.map((def, index) => ({
-  key: `node-${index}`,
-  ...project(def.i, def.j),
-  delay: (index * 0.5) % 4,
-}));
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
-const DATA_NODE_DEFS = [
-  { i: -5, j: 0, dur: 7.4 },
-  { i: 4, j: -1, dur: 6.8 },
-  { i: 0, j: -6, dur: 8.1 },
-  { i: -3, j: 5, dur: 7.0 },
-  { i: 6, j: 1, dur: 6.4 },
-];
+    const state = {
+      width: 0,
+      height: 0,
+      dpr: 1,
+      mouse: { x: 0, y: 0 },
+      mouseTarget: { x: 0, y: 0 },
+      vignette: null,
+      buildings: [],
+      particles: [],
+      pulses: [],
+    };
 
-const dataNodes = DATA_NODE_DEFS.map((def, index) => ({
-  key: `data-node-${index}`,
-  ...project(def.i, def.j),
-  dur: def.dur,
-  delay: (index * 0.8) % 3,
-}));
+    const rand = makeSeededRandom(7331);
 
-const hotspot = project(-2.5, 4);
+    // --- Generate buildings on a subset of grid cells ---
+    const buildings = [];
+    for (let row = 0; row < GRID_ROWS; row++) {
+      for (let col = 0; col < GRID_COLS; col++) {
+        if (rand() < BUILDING_DENSITY) {
+          buildings.push({
+            col,
+            row,
+            targetHeight: 34 + rand() * 120,
+            height: 0,
+            isCyan: rand() > 0.5,
+            phase: rand() * Math.PI * 2,
+          });
+        }
+      }
+    }
+    state.buildings = buildings;
 
-export default function HeroCityBackground() {
+    // --- Generate traffic particles traveling along rows/columns ---
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const horizontal = rand() > 0.5;
+      particles.push({
+        horizontal,
+        lane: Math.floor(rand() * (horizontal ? GRID_ROWS : GRID_COLS)),
+        t: rand(),
+        speed: 0.00006 + rand() * 0.00007,
+        color: [PALETTE.trafficCyan, PALETTE.trafficTeal, PALETTE.trafficViolet][
+          Math.floor(rand() * 3)
+        ],
+        lastNode: -1,
+      });
+    }
+    state.particles = particles;
+
+    function resize() {
+      const parent = canvas.parentElement;
+      const rect = parent ? parent.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight };
+      state.width = rect.width;
+      state.height = rect.height;
+      state.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = state.width * state.dpr;
+      canvas.height = state.height * state.dpr;
+      canvas.style.width = `${state.width}px`;
+      canvas.style.height = `${state.height}px`;
+
+      const gradient = ctx.createRadialGradient(
+        state.width / 2, state.height * 0.35, state.height * 0.1,
+        state.width / 2, state.height * 0.35, state.height * 0.9
+      );
+      gradient.addColorStop(0, "rgba(10, 13, 24, 0)");
+      gradient.addColorStop(1, "rgba(4, 5, 10, 0.85)");
+      state.vignette = gradient;
+    }
+
+    function handleMouseMove(e) {
+      const rect = canvas.getBoundingClientRect();
+      state.mouseTarget.x = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      state.mouseTarget.y = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    }
+
+    resize();
+    window.addEventListener("resize", resize);
+    window.addEventListener("mousemove", handleMouseMove);
+
+    function drawGrid(originX, originY) {
+      ctx.strokeStyle = PALETTE.gridLine;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let row = 0; row <= GRID_ROWS; row++) {
+        const start = project(0, row, originX, originY);
+        const end = project(GRID_COLS, row, originX, originY);
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+      }
+      for (let col = 0; col <= GRID_COLS; col++) {
+        const start = project(col, 0, originX, originY);
+        const end = project(col, GRID_ROWS, originX, originY);
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+      }
+      ctx.stroke();
+    }
+
+    function drawWindowLights(face, faceEdgeColor, count, time, phase) {
+      const [topA, topB, bottomA, bottomB] = face;
+      const topMid = lerpPt(topA, topB, 0.5);
+      const groundMid = lerpPt(bottomA, bottomB, 0.5);
+
+      for (let i = 1; i < count; i++) {
+        const u = i / count;
+        const pt = lerpPt(topMid, groundMid, u);
+        const flicker = 0.25 + 0.55 * Math.abs(Math.sin(time * 0.0012 + phase + i * 0.7));
+        ctx.beginPath();
+        ctx.fillStyle = faceEdgeColor.replace(/[\d.]+\)$/, `${flicker.toFixed(2)})`);
+        ctx.rect(pt.x - 3, pt.y - 1.5, 6, 3);
+        ctx.fill();
+      }
+    }
+
+    function drawBuilding(b, originX, originY, time) {
+      const { x: sx, y: sy } = project(b.col + 0.5, b.row + 0.5, originX, originY);
+      const halfW = TILE_W / 2.6;
+      const halfH = TILE_H / 2.6;
+      const h = b.height;
+
+      const top = { x: sx, y: sy - h - halfH };
+      const right = { x: sx + halfW, y: sy - h };
+      const bottom = { x: sx, y: sy - h + halfH };
+      const left = { x: sx - halfW, y: sy - h };
+      const groundRight = { x: sx + halfW, y: sy };
+      const groundBottom = { x: sx, y: sy + halfH };
+      const groundLeft = { x: sx - halfW, y: sy };
+
+      const edgeColor = b.isCyan ? PALETTE.edgeCyan : PALETTE.edgePurple;
+      const windowColor = b.isCyan ? PALETTE.windowCyan : PALETTE.windowPurple;
+
+      ctx.beginPath();
+      ctx.moveTo(right.x, right.y);
+      ctx.lineTo(bottom.x, bottom.y);
+      ctx.lineTo(groundBottom.x, groundBottom.y);
+      ctx.lineTo(groundRight.x, groundRight.y);
+      ctx.closePath();
+      ctx.fillStyle = PALETTE.buildingFillRight;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(left.x, left.y);
+      ctx.lineTo(bottom.x, bottom.y);
+      ctx.lineTo(groundBottom.x, groundBottom.y);
+      ctx.lineTo(groundLeft.x, groundLeft.y);
+      ctx.closePath();
+      ctx.fillStyle = PALETTE.buildingFillLeft;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(top.x, top.y);
+      ctx.lineTo(right.x, right.y);
+      ctx.lineTo(bottom.x, bottom.y);
+      ctx.lineTo(left.x, left.y);
+      ctx.closePath();
+      ctx.fillStyle = PALETTE.buildingFillTop;
+      ctx.fill();
+
+      ctx.save();
+      ctx.shadowColor = edgeColor;
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = edgeColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(top.x, top.y);
+      ctx.lineTo(right.x, right.y);
+      ctx.lineTo(bottom.x, bottom.y);
+      ctx.lineTo(left.x, left.y);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+
+      const windowRows = Math.max(2, Math.floor(h / 16));
+      drawWindowLights([right, bottom, groundRight, groundBottom], windowColor, windowRows, time, b.phase);
+      drawWindowLights([left, bottom, groundLeft, groundBottom], windowColor, windowRows, time, b.phase + 1.4);
+
+      const pulse = 0.5 + 0.5 * Math.sin(time * 0.002 + b.phase);
+      ctx.save();
+      ctx.shadowColor = edgeColor;
+      ctx.shadowBlur = 10 + pulse * 6;
+      ctx.fillStyle = edgeColor;
+      ctx.beginPath();
+      ctx.arc(top.x, top.y, 2 + pulse * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function updateParticle(p, dt) {
+      p.t += p.speed * dt;
+      if (p.t >= 1) p.t -= 1;
+
+      const span = p.horizontal ? GRID_COLS : GRID_ROWS;
+      const node = Math.floor(p.t * span);
+      if (node !== p.lastNode) {
+        p.lastNode = node;
+        const col = p.horizontal ? node : p.lane;
+        const row = p.horizontal ? p.lane : node;
+        state.pulses.push({ col, row, life: 1 });
+      }
+    }
+
+    function drawParticle(p, originX, originY) {
+      const span = p.horizontal ? GRID_COLS : GRID_ROWS;
+      const pos = p.t * span;
+      const trailPos = Math.max(0, pos - 0.4);
+
+      const col1 = p.horizontal ? pos : p.lane;
+      const row1 = p.horizontal ? p.lane : pos;
+      const col2 = p.horizontal ? trailPos : p.lane;
+      const row2 = p.horizontal ? p.lane : trailPos;
+
+      const head = project(col1, row1, originX, originY);
+      const tail = project(col2, row2, originX, originY);
+
+      ctx.save();
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 8;
+      const gradient = ctx.createLinearGradient(tail.x, tail.y, head.x, head.y);
+      gradient.addColorStop(0, "rgba(0,0,0,0)");
+      gradient.addColorStop(1, p.color);
+      ctx.strokeStyle = gradient;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(tail.x, tail.y);
+      ctx.lineTo(head.x, head.y);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawPulse(pulse, originX, originY) {
+      const { x, y } = project(pulse.col, pulse.row, originX, originY);
+      const radius = 4 + (1 - pulse.life) * 14;
+      ctx.save();
+      ctx.globalAlpha = Math.max(pulse.life, 0);
+      ctx.strokeStyle = "rgba(0, 242, 254, 0.7)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    let lastTime = performance.now();
+
+    function render(time) {
+      const dt = Math.min(time - lastTime, 50);
+      lastTime = time;
+
+      ctx.save();
+      ctx.scale(state.dpr, state.dpr);
+      ctx.fillStyle = PALETTE.background;
+      ctx.fillRect(0, 0, state.width, state.height);
+
+      state.mouse.x += (state.mouseTarget.x - state.mouse.x) * 0.04;
+      state.mouse.y += (state.mouseTarget.y - state.mouse.y) * 0.04;
+
+      const originX = state.width / 2 + state.mouse.x * 16;
+      const originY = state.height * 0.32 + state.mouse.y * 10;
+
+      drawGrid(originX, originY);
+
+      const sortedBuildings = [...state.buildings].sort(
+        (a, b) => (a.row + a.col) - (b.row + b.col)
+      );
+      for (const b of sortedBuildings) {
+        b.height += (b.targetHeight - b.height) * 0.02;
+        drawBuilding(b, originX, originY, time);
+      }
+
+      for (const p of state.particles) {
+        updateParticle(p, dt);
+        drawParticle(p, originX, originY);
+      }
+
+      state.pulses = state.pulses.filter((pulse) => pulse.life > 0);
+      for (const pulse of state.pulses) {
+        pulse.life -= dt * 0.0022;
+        drawPulse(pulse, originX, originY);
+      }
+
+      if (state.vignette) {
+        ctx.fillStyle = state.vignette;
+        ctx.fillRect(0, 0, state.width, state.height);
+      }
+
+      ctx.restore();
+      frameRef.current = requestAnimationFrame(render);
+    }
+
+    frameRef.current = requestAnimationFrame(render);
+
+    return () => {
+      cancelAnimationFrame(frameRef.current);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, []);
+
   return (
-    <div className="dm-hero-fade-in pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <svg viewBox="0 0 1200 560" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
-        <defs>
-          <filter id="hero-glow-blur" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="4" />
-          </filter>
-          <radialGradient id="hero-hotspot-gradient" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#F97316" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#F97316" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-
-        <g className="dm-camera-rig">
-          <g stroke="#38415A" strokeWidth="1" opacity="0.55">
-            {gridLines.map((line) => (
-              <line key={line.key} x1={line.x} y1={line.y} x2={line.x2} y2={line.y2} />
-            ))}
-          </g>
-
-          <g stroke="#5B6B99" strokeWidth="1" fill="none" opacity="0.6">
-            {buildings.map((b) => (
-              <g key={b.key}>
-                <path d={b.top} />
-                {b.verticals.map((v, i) => (
-                  <path key={i} d={v} />
-                ))}
-              </g>
-            ))}
-          </g>
-
-          {flowPaths.map((flow) => (
-            <g key={flow.key}>
-              <path
-                d={flow.d}
-                fill="none"
-                stroke={flow.color}
-                strokeWidth="5"
-                strokeLinecap="round"
-                filter="url(#hero-glow-blur)"
-                className="dm-glow-pulse"
-              />
-              <path
-                d={flow.d}
-                fill="none"
-                stroke={flow.color}
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                opacity="0.9"
-                className="dm-dash-flow"
-              />
-              <g className="hero-motion-sensitive">
-                <circle r="4" fill={flow.color} filter="url(#hero-glow-blur)">
-                  <animateMotion dur="6s" begin="0s" repeatCount="indefinite" path={flow.d} />
-                </circle>
-                <circle r="3" fill={flow.color} filter="url(#hero-glow-blur)" opacity="0.8">
-                  <animateMotion dur="6s" begin="3s" repeatCount="indefinite" path={flow.d} />
-                </circle>
-              </g>
-            </g>
-          ))}
-
-          <g className="hero-motion-sensitive">
-            {intersections.map((node) => (
-              <circle
-                key={node.key}
-                cx={node.x}
-                cy={node.y}
-                r="3"
-                fill="none"
-                stroke="#A5B4FC"
-                strokeWidth="1.5"
-                className="dm-node-pulse"
-                style={{ animationDelay: `${node.delay}s` }}
-              />
-            ))}
-          </g>
-
-          <g className="hidden sm:block">
-            {dataNodes.map((node) => (
-              <g
-                key={node.key}
-                className="dm-data-node"
-                style={{ "--dur": `${node.dur}s`, "--delay": `${node.delay}s` }}
-              >
-                <circle cx={node.x} cy={node.y} r="9" fill="none" stroke="#67E8F9" strokeWidth="1" opacity="0.7" />
-                <circle cx={node.x} cy={node.y} r="2.5" fill="#67E8F9" filter="url(#hero-glow-blur)" />
-              </g>
-            ))}
-          </g>
-
-          <circle
-            className="dm-hotspot hero-motion-sensitive hidden sm:block"
-            cx={hotspot.x}
-            cy={hotspot.y}
-            r="38"
-            fill="url(#hero-hotspot-gradient)"
-          />
-        </g>
-      </svg>
-    </div>
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className={`absolute inset-0 h-full w-full ${className}`}
+      style={{ opacity, pointerEvents: "none" }}
+    />
   );
 }
